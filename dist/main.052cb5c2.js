@@ -129,7 +129,7 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.grid_y_to_y = exports.grid_x_to_x = exports.unsafe = exports.mod = void 0;
+exports.range = exports.grid_y_to_y = exports.grid_x_to_x = exports.unsafe = exports.mod = void 0;
 
 var settings_1 = __importDefault(require("./settings"));
 
@@ -164,6 +164,20 @@ function grid_y_to_y(y, center) {
 }
 
 exports.grid_y_to_y = grid_y_to_y;
+
+function range(start, end) {
+  var result = Array(Math.abs(end - start));
+  var result_index = 0;
+  if (start == end) return [start];
+
+  while (start != end) {
+    result[result_index++] = start < end ? start++ : start--;
+  }
+
+  return result;
+}
+
+exports.range = range;
 },{"./settings":"scripts/settings.ts"}],"scripts/settings.ts":[function(require,module,exports) {
 "use strict";
 
@@ -297,7 +311,7 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.library = exports.EastOp = exports.WestOp = exports.SouthOp = exports.NorthOp = void 0;
+exports.library = exports.StopMod = exports.EastEnt = exports.WestEnt = exports.SouthEnt = exports.NorthEnt = void 0;
 
 var settings_1 = __importDefault(require("./settings"));
 
@@ -313,7 +327,7 @@ var Operators = function () {
 
   Operators.prototype.write = function (glyph, x, y) {
     this.store[this.index_at(x, y)] = new exports.library[glyph](x, y);
-    console.log(this.store);
+    this.refresh_objects();
   };
 
   Operators.prototype.erase = function (x, y) {
@@ -326,6 +340,13 @@ var Operators = function () {
     for (var _i = 0, _a = this.store; _i < _a.length; _i++) {
       var operator = _a[_i];
       if (operator) operator.draw(this.canvas_context);
+    }
+  };
+
+  Operators.prototype.refresh_objects = function () {
+    for (var _i = 0, _a = this.store; _i < _a.length; _i++) {
+      var obj = _a[_i];
+      if (obj instanceof LineEnt) obj.scan(this.store);
     }
   }; // Helpers
 
@@ -345,54 +366,132 @@ var Operators = function () {
 
 exports.default = Operators;
 
-var Entity = function () {
-  function Entity(glyph, x, y) {
+var Operator = function () {
+  function Operator(glyph, x, y) {
     this.x = x;
     this.y = y;
     this.glyph = glyph;
   }
 
-  Entity.prototype.draw_glyph = function (canvas_context) {
+  Operator.prototype.draw_glyph = function (canvas_context) {
     canvas_context.fillStyle = settings_1.default.bg_color;
     canvas_context.fillRect(utils_1.grid_x_to_x(this.x), utils_1.grid_y_to_y(this.y), settings_1.default.cell_size, settings_1.default.cell_size);
     canvas_context.fillStyle = settings_1.default.font_color;
     canvas_context.fillText(this.glyph, utils_1.grid_x_to_x(this.x, true), utils_1.grid_y_to_y(this.y, true));
   };
 
-  return Entity;
+  return Operator;
 }();
 
-var LineOp = function (_super) {
-  __extends(LineOp, _super);
+var LineMod = function (_super) {
+  __extends(LineMod, _super);
 
-  function LineOp(glyph, x, y) {
+  function LineMod(glyph, x, y) {
+    return _super.call(this, glyph, x, y) || this;
+  }
+
+  LineMod.prototype.draw = function (canvas_context) {
+    this.draw_glyph(canvas_context);
+  };
+
+  return LineMod;
+}(Operator);
+
+var LineEnt = function (_super) {
+  __extends(LineEnt, _super);
+
+  function LineEnt(glyph, x, y) {
     var _this = _super.call(this, glyph, x, y) || this;
 
     _this.commands = [];
+    _this.accepts = [LineMod];
     return _this;
   }
 
-  LineOp.prototype.draw = function (canvas_context) {
+  LineEnt.prototype.draw = function (canvas_context) {
     this.draw_glyph(canvas_context);
+    var modded_commands = this.modify(this.commands);
 
-    for (var cI = 0; cI + 1 < this.commands.length; cI++) {
-      var command = this.commands[cI];
-      var next_command = this.commands[cI + 1];
+    for (var cI = 0; cI + 1 < modded_commands.length; cI++) {
+      var command = modded_commands[cI];
+      var next_command = modded_commands[cI + 1];
       canvas_context.beginPath();
       canvas_context.moveTo(utils_1.grid_x_to_x(command.x, true), utils_1.grid_y_to_y(command.y, true));
       canvas_context.lineTo(utils_1.grid_x_to_x(next_command.x, true), utils_1.grid_y_to_y(next_command.y, true));
       canvas_context.strokeStyle = settings_1.default.font_color;
       canvas_context.stroke();
     }
+  }; // Returns the index of collision with command. 
+  // Meaning, if value collides with line drawn from command [0] to [1], index returned is 0.
+  // Otherwise returns false.
+
+
+  LineEnt.prototype.collides = function (x, y) {
+    var collision_index = false;
+
+    for (var cI = 0; cI + 1 < this.commands.length; cI++) {
+      var cX = this.commands[cI].x;
+      var cY = this.commands[cI].y;
+      var cX1 = this.commands[cI + 1].x;
+      var cY1 = this.commands[cI + 1].y;
+      var collision_range_x = utils_1.range(Math.min(cX, cX1), Math.max(cX, cX1));
+      var collision_range_y = utils_1.range(Math.min(cY, cY1), Math.max(cY, cY1));
+      if (collision_range_x.includes(x) && collision_range_y.includes(y)) collision_index = cI;
+    }
+
+    return collision_index;
   };
 
-  return LineOp;
-}(Entity);
+  LineEnt.prototype.scan = function (operators) {
+    this.modifiers = [];
 
-var NorthOp = function (_super) {
-  __extends(NorthOp, _super);
+    for (var _i = 0, _a = operators.filter(function (e) {
+      return e != undefined;
+    }); _i < _a.length; _i++) {
+      var operator = _a[_i]; // Ignore the calling operator
 
-  function NorthOp(x, y) {
+      if (operator == this) continue;
+      var collides_at = this.collides(operator.x, operator.y);
+
+      if (collides_at !== false && this.compatible(operator)) {
+        this.modifiers.push([collides_at, operator]);
+        console.log("Just collided!");
+      }
+    }
+  }; // Returns a new command Array with the modifiers applied.
+
+
+  LineEnt.prototype.modify = function (commands) {
+    if (this.modifiers.length > 0) {
+      return this.modifiers.reduce(function (accum, _a) {
+        var index = _a[0],
+            modifier = _a[1];
+        return modifier.modify(accum, index);
+      }, commands);
+    } else {
+      return commands;
+    }
+  }; // Check if the given operator is present in our "accepts" array.
+
+
+  LineEnt.prototype.compatible = function (operator) {
+    var found = false;
+
+    for (var _i = 0, _a = this.accepts; _i < _a.length; _i++) {
+      var acceptable = _a[_i];
+      if (operator instanceof acceptable) found = true;
+    }
+
+    return found;
+  };
+
+  return LineEnt;
+}(Operator);
+
+var NorthEnt = function (_super) {
+  __extends(NorthEnt, _super);
+
+  function NorthEnt(x, y) {
     var _this = _super.call(this, "N", x, y) || this;
 
     _this.commands = [{
@@ -405,15 +504,15 @@ var NorthOp = function (_super) {
     return _this;
   }
 
-  return NorthOp;
-}(LineOp);
+  return NorthEnt;
+}(LineEnt);
 
-exports.NorthOp = NorthOp;
+exports.NorthEnt = NorthEnt;
 
-var SouthOp = function (_super) {
-  __extends(SouthOp, _super);
+var SouthEnt = function (_super) {
+  __extends(SouthEnt, _super);
 
-  function SouthOp(x, y) {
+  function SouthEnt(x, y) {
     var _this = _super.call(this, "S", x, y) || this;
 
     _this.commands = [{
@@ -426,15 +525,15 @@ var SouthOp = function (_super) {
     return _this;
   }
 
-  return SouthOp;
-}(LineOp);
+  return SouthEnt;
+}(LineEnt);
 
-exports.SouthOp = SouthOp;
+exports.SouthEnt = SouthEnt;
 
-var WestOp = function (_super) {
-  __extends(WestOp, _super);
+var WestEnt = function (_super) {
+  __extends(WestEnt, _super);
 
-  function WestOp(x, y) {
+  function WestEnt(x, y) {
     var _this = _super.call(this, "W", x, y) || this;
 
     _this.commands = [{
@@ -447,15 +546,15 @@ var WestOp = function (_super) {
     return _this;
   }
 
-  return WestOp;
-}(LineOp);
+  return WestEnt;
+}(LineEnt);
 
-exports.WestOp = WestOp;
+exports.WestEnt = WestEnt;
 
-var EastOp = function (_super) {
-  __extends(EastOp, _super);
+var EastEnt = function (_super) {
+  __extends(EastEnt, _super);
 
-  function EastOp(x, y) {
+  function EastEnt(x, y) {
     var _this = _super.call(this, "E", x, y) || this;
 
     _this.commands = [{
@@ -468,15 +567,37 @@ var EastOp = function (_super) {
     return _this;
   }
 
-  return EastOp;
-}(LineOp);
+  return EastEnt;
+}(LineEnt);
 
-exports.EastOp = EastOp;
+exports.EastEnt = EastEnt; // Stop a line
+
+var StopMod = function (_super) {
+  __extends(StopMod, _super);
+
+  function StopMod(x, y) {
+    return _super.call(this, "x", x, y) || this;
+  }
+
+  StopMod.prototype.modify = function (commands, instruction_index) {
+    var new_commands = commands.slice(0, instruction_index + 1);
+    new_commands.push({
+      x: this.x,
+      y: this.y
+    });
+    return new_commands;
+  };
+
+  return StopMod;
+}(LineMod);
+
+exports.StopMod = StopMod;
 exports.library = {
-  "N": NorthOp,
-  "S": SouthOp,
-  "W": WestOp,
-  "E": EastOp
+  "N": NorthEnt,
+  "S": SouthEnt,
+  "W": WestEnt,
+  "E": EastEnt,
+  "x": StopMod
 };
 },{"./settings":"scripts/settings.ts","./utils":"scripts/utils.ts"}],"scripts/cursor.ts":[function(require,module,exports) {
 "use strict";
@@ -514,10 +635,9 @@ var Cursor = function () {
     var default_fn = function default_fn(_x, _y) {}; // ADD NEW EVENT NAMES HERE, MAKE SURE TO ADD THEM TO THE SWITCH CASE AS WELL!:
 
 
-    var event_names = ['move_left', 'move_right', 'move_up', 'move_down', 'n', 's', 'e', 'w', 'x']; // Register event_names as object { event_name: default_fn }
+    var event_names = ['move_left', 'move_right', 'move_up', 'move_down', 'Backspace', 'n', 's', 'e', 'w', 'x']; // Register event_names as object { event_name: default_fn }
 
     this.events = event_names.reduce(function (prev, curr, _i) {
-      console.log(prev);
       prev[curr] = default_fn;
       return prev;
     }, {});
@@ -575,6 +695,10 @@ var Cursor = function () {
 
         case 'x':
           binding.events['x'](binding.x, binding.y);
+          break;
+
+        case 'Backspace':
+          binding.events['Backspace'](binding.x, binding.y);
           break;
       }
     };
@@ -660,8 +784,13 @@ var Ripl = function () {
     this.cursor.on('w', function (x, y) {
       return _this.operators.write("W", x, y);
     });
+    this.cursor.on('Backspace', function (x, y) {
+      _this.operators.erase(x, y);
+
+      _this.operators.refresh_objects();
+    });
     this.cursor.on('x', function (x, y) {
-      return _this.operators.erase(x, y);
+      return _this.operators.write("x", x, y);
     });
   }
 

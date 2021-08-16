@@ -19,3 +19,15 @@ export function grid_y_to_y(y: number, center: boolean = false) : number
 {
   return (y + (center ? 0.6 : 0)) * s.cell_size + s.v_padding;
 }
+
+export function range(start: number, end: number) : Array<number>
+{
+  const result = Array(Math.abs(end - start))
+  let result_index = 0;
+  if (start == end) return [start];
+  while (start != end)
+    {
+      result[result_index++] = start < end ? start++ : start--;
+    }
+  return result;
+}

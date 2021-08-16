@@ -4,7 +4,8 @@ import { unsafe, grid_x_to_x, grid_y_to_y } from './utils'
 type CursorEventName = 
 	'move_left' | 'move_right' | 'move_down' | 'move_up' |
 	'n' | 's' | 'e' | 'w' |
-	'x';
+	'Backspace' |
+	'x' ; 
 type CursorEventFunction =
 	(cursor_x: number, cursor_y: number) => void;
 
@@ -28,11 +29,10 @@ export default class Cursor
 		const default_fn = (_x: number, _y: number) => {};
 
 		// ADD NEW EVENT NAMES HERE, MAKE SURE TO ADD THEM TO THE SWITCH CASE AS WELL!:
-		const event_names = ['move_left', 'move_right', 'move_up', 'move_down', 'n', 's', 'e', 'w', 'x'];
+		const event_names = ['move_left', 'move_right', 'move_up', 'move_down', 'Backspace', 'n', 's', 'e', 'w', 'x'];
 		
 		// Register event_names as object { event_name: default_fn }
 		this.events = event_names.reduce((prev, curr, _i) =>{
-			console.log(prev);
 			prev[curr] = default_fn;
 			return prev;
 		}, {});
@@ -87,6 +87,9 @@ export default class Cursor
 					break;
 				case 'x':
 					binding.events['x'](binding.x, binding.y);
+					break;
+				case 'Backspace':
+					binding.events['Backspace'](binding.x, binding.y);
 					break;
 			}
 		}

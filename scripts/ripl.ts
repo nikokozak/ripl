@@ -25,11 +25,13 @@ export default class Ripl
 		this.cursor = new Cursor(cursor_canvas);
 		
 		// Cursor / keyboard listeners
-		this.cursor.on('n', (x: number, y: number) => this.operators.write("N", x, y))
-		this.cursor.on('s', (x: number, y: number) => this.operators.write("S", x, y))
-		this.cursor.on('e', (x: number, y: number) => this.operators.write("E", x, y))
-		this.cursor.on('w', (x: number, y: number) => this.operators.write("W", x, y))
-		this.cursor.on('x', (x: number, y: number) => this.operators.erase(x, y))
+		this.cursor.on('n', (x: number, y: number) => this.operators.write("N", x, y));
+		this.cursor.on('s', (x: number, y: number) => this.operators.write("S", x, y));
+		this.cursor.on('e', (x: number, y: number) => this.operators.write("E", x, y));
+		this.cursor.on('w', (x: number, y: number) => this.operators.write("W", x, y));
+		this.cursor.on('Backspace', (x: number, y: number) => {
+			this.operators.erase(x, y); this.operators.refresh_objects(); });
+		this.cursor.on('x', (x: number, y: number) => this.operators.write("x", x, y));
 	}
 
 	draw ()
