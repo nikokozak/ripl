@@ -7,7 +7,8 @@ export const event_mappings = {
 	'N': 'N', 'S': 'S', 'E': 'E', 'W': 'W',
 	'n': 'n', 's': 's', 'e': 'e', 'w': 'w',
 	'Backspace': 'Backspace',
-	'x': 'x'
+	'x': 'x',
+	'Enter': 'Enter',
 }
 
 

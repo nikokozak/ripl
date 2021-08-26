@@ -2,6 +2,7 @@ import settings from './settings'
 import RefGrid from './reference-grid'
 import Commander from './commander/commander'
 import Cursor from './cursor/cursor'
+import { grid_y_to_y, grid_x_to_x } from './utils'
 
 const grid_canvas = document.getElementById('grid-canvas') as HTMLCanvasElement;
 const commander_canvas = document.getElementById('commander-canvas') as HTMLCanvasElement;
@@ -33,6 +34,13 @@ export default class Ripl
 			this.commander.erase(x, y); this.commander.refresh(); 
 		});
 		this.cursor.on('x', (x: number, y: number) => this.commander.write("x", x, y));
+		this.cursor.on('Enter', (x: number, y: number) => {
+			const popup = document.createElement('div') 
+			const x_coord = grid_x_to_x(x);
+			const y_coord = grid_y_to_y(y);
+			popup.setAttribute('style', `width: 100px; height: 100px; background-color: red; position: absolute; left: ${x_coord}px; top: ${y_coord}px`);
+			document.body.appendChild(popup);
+		});
 	}
 
 	draw ()
