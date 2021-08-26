@@ -20,6 +20,8 @@ class Settings
 	public bg_color: string;
 	public base_glyph: string;
 
+	public line_width: number;
+
 	constructor ()
 	{
 		this.canvas_width = 500;
@@ -39,6 +41,8 @@ class Settings
 		this.highlight_bg_color = "rgb(255, 255, 255)";
 		this.bg_color = "rgb(0, 0, 0)";
 		this.base_glyph = "·";
+
+		this.line_width = 5;
 	}
 
 	install (canvases: Array<HTMLCanvasElement>) {

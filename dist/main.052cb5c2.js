@@ -129,7 +129,7 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.range = exports.grid_y_to_y = exports.grid_x_to_x = exports.unsafe = exports.mod = void 0;
+exports.clone = exports.range = exports.grid_y_to_y = exports.grid_x_to_x = exports.unsafe = exports.mod = void 0;
 
 var settings_1 = __importDefault(require("./settings"));
 
@@ -178,6 +178,12 @@ function range(start, end) {
 }
 
 exports.range = range;
+
+function clone(obj_or_array) {
+  return JSON.parse(JSON.stringify(obj_or_array));
+}
+
+exports.clone = clone;
 },{"./settings":"scripts/settings.ts"}],"scripts/settings.ts":[function(require,module,exports) {
 "use strict";
 
@@ -205,6 +211,7 @@ var Settings = function () {
     this.highlight_bg_color = "rgb(255, 255, 255)";
     this.bg_color = "rgb(0, 0, 0)";
     this.base_glyph = "·";
+    this.line_width = 5;
   }
 
   Settings.prototype.install = function (canvases) {
@@ -271,7 +278,93 @@ var ReferenceGrid = function () {
 }();
 
 exports.default = ReferenceGrid;
-},{"./utils":"scripts/utils.ts","./settings":"scripts/settings.ts"}],"scripts/operators.ts":[function(require,module,exports) {
+},{"./utils":"scripts/utils.ts","./settings":"scripts/settings.ts"}],"scripts/commander/commands/command.ts":[function(require,module,exports) {
+"use strict";
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var settings_1 = __importDefault(require("../../settings"));
+
+var utils_1 = require("../../utils");
+
+var Command = function () {
+  function Command(glyph, x, y) {
+    this.x = x;
+    this.y = y;
+    this.glyph = glyph;
+  }
+
+  Command.prototype.draw_glyph = function (canvas_context) {
+    canvas_context.fillStyle = settings_1.default.bg_color;
+    canvas_context.fillRect(utils_1.grid_x_to_x(this.x), utils_1.grid_y_to_y(this.y), settings_1.default.cell_size, settings_1.default.cell_size);
+    canvas_context.fillStyle = settings_1.default.font_color;
+    canvas_context.fillText(this.glyph, utils_1.grid_x_to_x(this.x, true), utils_1.grid_y_to_y(this.y, true));
+  };
+
+  Command.prototype.draw = function (canvas_context) {
+    this.draw_glyph(canvas_context);
+  };
+
+  Command.prototype.scan = function (_modifiers) {
+    return null;
+  };
+
+  Command.prototype.refresh = function (_modifiers) {
+    return null;
+  };
+
+  return Command;
+}();
+
+exports.default = Command;
+},{"../../settings":"scripts/settings.ts","../../utils":"scripts/utils.ts"}],"scripts/commander/modifiers/modifier.ts":[function(require,module,exports) {
+"use strict";
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var settings_1 = __importDefault(require("../../settings"));
+
+var utils_1 = require("../../utils");
+
+var Modifier = function () {
+  function Modifier(glyph, x, y) {
+    this.x = x;
+    this.y = y;
+    this.glyph = glyph;
+  }
+
+  Modifier.prototype.draw = function (canvas_context) {
+    canvas_context.fillStyle = settings_1.default.bg_color;
+    canvas_context.fillRect(utils_1.grid_x_to_x(this.x), utils_1.grid_y_to_y(this.y), settings_1.default.cell_size, settings_1.default.cell_size);
+    canvas_context.fillStyle = settings_1.default.font_color;
+    canvas_context.fillText(this.glyph, utils_1.grid_x_to_x(this.x, true), utils_1.grid_y_to_y(this.y, true));
+  };
+
+  Modifier.prototype.modify = function (commands, _instruction_index) {
+    return commands;
+  };
+
+  return Modifier;
+}();
+
+exports.default = Modifier;
+},{"../../settings":"scripts/settings.ts","../../utils":"scripts/utils.ts"}],"scripts/commander/modifiers/lines.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -311,187 +404,297 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.library = exports.StopMod = exports.EastEnt = exports.WestEnt = exports.SouthEnt = exports.NorthEnt = void 0;
+exports.WestLine = exports.EastLine = exports.SouthLine = exports.NorthLine = exports.StopLine = void 0;
 
-var settings_1 = __importDefault(require("./settings"));
+var modifier_1 = __importDefault(require("./modifier"));
 
-var utils_1 = require("./utils"); // Controller for all of our Operators.
+var settings_1 = __importDefault(require("../../settings")); // Stop a line
 
 
-var Operators = function () {
-  function Operators(canvas) {
-    this.canvas = canvas;
-    this.canvas_context = canvas.getContext('2d');
-    this.store = Array(settings_1.default.cols * settings_1.default.rows);
+var StopLine = function (_super) {
+  __extends(StopLine, _super);
+
+  function StopLine(x, y) {
+    return _super.call(this, "x", x, y) || this;
   }
 
-  Operators.prototype.write = function (glyph, x, y) {
-    this.store[this.index_at(x, y)] = new exports.library[glyph](x, y);
-    this.refresh_objects();
-  };
-
-  Operators.prototype.erase = function (x, y) {
-    this.store[this.index_at(x, y)] = undefined;
-  };
-
-  Operators.prototype.draw = function () {
-    this.canvas_context.clearRect(0, 0, settings_1.default.canvas_width, settings_1.default.canvas_height);
-
-    for (var _i = 0, _a = this.store; _i < _a.length; _i++) {
-      var operator = _a[_i];
-      if (operator) operator.draw(this.canvas_context);
-    }
-  };
-
-  Operators.prototype.refresh_objects = function () {
-    for (var _i = 0, _a = this.store; _i < _a.length; _i++) {
-      var obj = _a[_i];
-      if (obj instanceof LineEnt) obj.scan(this.store);
-    }
-  }; // Helpers
-
-
-  Operators.prototype.at = function (x, y) {
-    return this.store.find(function (op) {
-      return op.x == x && op.y == y;
+  StopLine.prototype.modify = function (commands, instruction_index) {
+    var new_commands = commands.slice(0, instruction_index + 1);
+    new_commands.push({
+      x: this.x,
+      y: this.y
     });
+    return new_commands;
   };
 
-  Operators.prototype.index_at = function (x, y) {
-    return y * settings_1.default.cols + x;
-  };
+  return StopLine;
+}(modifier_1.default);
 
-  return Operators;
-}();
+exports.StopLine = StopLine;
 
-exports.default = Operators;
+var NorthLine = function (_super) {
+  __extends(NorthLine, _super);
 
-var Operator = function () {
-  function Operator(glyph, x, y) {
-    this.x = x;
-    this.y = y;
-    this.glyph = glyph;
+  function NorthLine(x, y) {
+    return _super.call(this, "n", x, y) || this;
   }
 
-  Operator.prototype.draw_glyph = function (canvas_context) {
-    canvas_context.fillStyle = settings_1.default.bg_color;
-    canvas_context.fillRect(utils_1.grid_x_to_x(this.x), utils_1.grid_y_to_y(this.y), settings_1.default.cell_size, settings_1.default.cell_size);
-    canvas_context.fillStyle = settings_1.default.font_color;
-    canvas_context.fillText(this.glyph, utils_1.grid_x_to_x(this.x, true), utils_1.grid_y_to_y(this.y, true));
+  NorthLine.prototype.modify = function (commands, instruction_index) {
+    var new_commands = commands.slice(0, instruction_index + 1);
+    new_commands.push({
+      x: this.x,
+      y: this.y
+    });
+    new_commands.push({
+      x: this.x,
+      y: 0
+    });
+    return new_commands;
   };
 
-  return Operator;
-}();
+  return NorthLine;
+}(modifier_1.default);
 
-var LineMod = function (_super) {
-  __extends(LineMod, _super);
+exports.NorthLine = NorthLine;
 
-  function LineMod(glyph, x, y) {
-    return _super.call(this, glyph, x, y) || this;
+var SouthLine = function (_super) {
+  __extends(SouthLine, _super);
+
+  function SouthLine(x, y) {
+    return _super.call(this, "s", x, y) || this;
   }
 
-  LineMod.prototype.draw = function (canvas_context) {
-    this.draw_glyph(canvas_context);
+  SouthLine.prototype.modify = function (commands, instruction_index) {
+    var new_commands = commands.slice(0, instruction_index + 1);
+    new_commands.push({
+      x: this.x,
+      y: this.y
+    });
+    new_commands.push({
+      x: this.x,
+      y: settings_1.default.rows - 1
+    });
+    return new_commands;
   };
 
-  return LineMod;
-}(Operator);
+  return SouthLine;
+}(modifier_1.default);
 
-var LineEnt = function (_super) {
-  __extends(LineEnt, _super);
+exports.SouthLine = SouthLine;
 
-  function LineEnt(glyph, x, y) {
+var EastLine = function (_super) {
+  __extends(EastLine, _super);
+
+  function EastLine(x, y) {
+    return _super.call(this, "e", x, y) || this;
+  }
+
+  EastLine.prototype.modify = function (commands, instruction_index) {
+    var new_commands = commands.slice(0, instruction_index + 1);
+    new_commands.push({
+      x: this.x,
+      y: this.y
+    });
+    new_commands.push({
+      x: settings_1.default.cols - 1,
+      y: this.y
+    });
+    return new_commands;
+  };
+
+  return EastLine;
+}(modifier_1.default);
+
+exports.EastLine = EastLine;
+
+var WestLine = function (_super) {
+  __extends(WestLine, _super);
+
+  function WestLine(x, y) {
+    return _super.call(this, "w", x, y) || this;
+  }
+
+  WestLine.prototype.modify = function (commands, instruction_index) {
+    var new_commands = commands.slice(0, instruction_index + 1);
+    new_commands.push({
+      x: this.x,
+      y: this.y
+    });
+    new_commands.push({
+      x: 0,
+      y: this.y
+    });
+    return new_commands;
+  };
+
+  return WestLine;
+}(modifier_1.default);
+
+exports.WestLine = WestLine;
+},{"./modifier":"scripts/commander/modifiers/modifier.ts","../../settings":"scripts/settings.ts"}],"scripts/commander/accepts.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _lines = require("./modifiers/lines");
+
+var _default = {
+  Line: [_lines.StopLine, _lines.NorthLine, _lines.SouthLine, _lines.EastLine, _lines.WestLine]
+};
+exports.default = _default;
+},{"./modifiers/lines":"scripts/commander/modifiers/lines.ts"}],"scripts/commander/commands/lines.ts":[function(require,module,exports) {
+"use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.EastLine = exports.WestLine = exports.SouthLine = exports.NorthLine = void 0;
+
+var command_1 = __importDefault(require("./command"));
+
+var accepts_1 = __importDefault(require("../accepts"));
+
+var utils_1 = require("../../utils");
+
+var settings_1 = __importDefault(require("../../settings"));
+
+var Line = function (_super) {
+  __extends(Line, _super);
+
+  function Line(glyph, x, y) {
     var _this = _super.call(this, glyph, x, y) || this;
 
     _this.commands = [];
-    _this.accepts = [LineMod];
+    _this._commands = []; // Keep originals
+
+    _this.accepts = accepts_1.default.Line;
     return _this;
   }
 
-  LineEnt.prototype.draw = function (canvas_context) {
-    this.draw_glyph(canvas_context);
-    var modded_commands = this.modify(this.commands);
-
-    for (var cI = 0; cI + 1 < modded_commands.length; cI++) {
-      var command = modded_commands[cI];
-      var next_command = modded_commands[cI + 1];
+  Line.prototype.draw = function (canvas_context) {
+    //const modded_commands = this.modify(this.commands);
+    for (var cI = 0; cI + 1 < this.commands.length; cI++) {
+      var command = this.commands[cI];
+      var next_command = this.commands[cI + 1];
       canvas_context.beginPath();
       canvas_context.moveTo(utils_1.grid_x_to_x(command.x, true), utils_1.grid_y_to_y(command.y, true));
       canvas_context.lineTo(utils_1.grid_x_to_x(next_command.x, true), utils_1.grid_y_to_y(next_command.y, true));
       canvas_context.strokeStyle = settings_1.default.font_color;
+      canvas_context.lineWidth = settings_1.default.line_width;
       canvas_context.stroke();
     }
-  }; // Returns the index of collision with command. 
-  // Meaning, if value collides with line drawn from command [0] to [1], index returned is 0.
-  // Otherwise returns false.
 
-
-  LineEnt.prototype.collides = function (x, y) {
-    var collision_index = false;
-
-    for (var cI = 0; cI + 1 < this.commands.length; cI++) {
-      var cX = this.commands[cI].x;
-      var cY = this.commands[cI].y;
-      var cX1 = this.commands[cI + 1].x;
-      var cY1 = this.commands[cI + 1].y;
-      var collision_range_x = utils_1.range(Math.min(cX, cX1), Math.max(cX, cX1));
-      var collision_range_y = utils_1.range(Math.min(cY, cY1), Math.max(cY, cY1));
-      if (collision_range_x.includes(x) && collision_range_y.includes(y)) collision_index = cI;
-    }
-
-    return collision_index;
+    this.draw_glyph(canvas_context);
   };
 
-  LineEnt.prototype.scan = function (operators) {
+  Line.prototype.interact = function (unvetted_modifiers) {
     this.modifiers = [];
+    var index = 0;
 
-    for (var _i = 0, _a = operators.filter(function (e) {
-      return e != undefined;
-    }); _i < _a.length; _i++) {
-      var operator = _a[_i]; // Ignore the calling operator
+    while (index < this.commands.length - 1) {
+      var collision = this.collision_at_cmd_index(index, unvetted_modifiers);
 
-      if (operator == this) continue;
-      var collides_at = this.collides(operator.x, operator.y);
-
-      if (collides_at !== false && this.compatible(operator)) {
-        this.modifiers.push([collides_at, operator]);
-        console.log("Just collided!");
+      if (collision && !this.modifiers.includes(collision) && this.compatible(collision)) {
+        this.modifiers.push(collision);
+        this.commands = collision.modify(this.commands, index);
+        console.log("collided with " + collision.glyph);
       }
+
+      index++;
     }
-  }; // Returns a new command Array with the modifiers applied.
+  }; // At a given command index, returns the nearest collision between the command at the given index and the next command.
 
 
-  LineEnt.prototype.modify = function (commands) {
-    if (this.modifiers.length > 0) {
-      return this.modifiers.reduce(function (accum, _a) {
-        var index = _a[0],
-            modifier = _a[1];
-        return modifier.modify(accum, index);
-      }, commands);
-    } else {
-      return commands;
+  Line.prototype.collision_at_cmd_index = function (command_index, modifiers) {
+    if (command_index == this.commands.length - 1) {
+      return false;
     }
+
+    var cX = this.commands[command_index].x;
+    var cY = this.commands[command_index].y;
+    var cX1 = this.commands[command_index + 1].x;
+    var cY1 = this.commands[command_index + 1].y;
+    var collision_range_x = utils_1.range(Math.min(cX, cX1), Math.max(cX, cX1));
+    var collision_range_y = utils_1.range(Math.min(cY, cY1), Math.max(cY, cY1));
+    var collisions_at_curr_index = modifiers.filter(function (el) {
+      return el && collision_range_x.includes(el.x) && collision_range_y.includes(el.y) && (el.x != cX || el.y != cY);
+    });
+    var nearest_collider = collisions_at_curr_index.sort(function (m1, m2) {
+      var m1_diff = Math.abs(m1.x - cX) + Math.abs(m1.y - cY);
+      var m2_diff = Math.abs(m2.x - cX) + Math.abs(m2.y - cY);
+      if (m1_diff < m2_diff) return -1;
+      if (m1_diff > m2_diff) return 1;
+      if (m1_diff == m2_diff) return 0;
+    })[0];
+    console.log(collisions_at_curr_index);
+    console.log(command_index);
+    console.log(nearest_collider);
+    return nearest_collider ? nearest_collider : false;
+  };
+
+  Line.prototype.refresh = function (modifiers) {
+    this.commands = utils_1.clone(this._commands);
+    this.interact(modifiers);
   }; // Check if the given operator is present in our "accepts" array.
 
 
-  LineEnt.prototype.compatible = function (operator) {
+  Line.prototype.compatible = function (modifier) {
     var found = false;
 
     for (var _i = 0, _a = this.accepts; _i < _a.length; _i++) {
       var acceptable = _a[_i];
-      if (operator instanceof acceptable) found = true;
+      if (modifier instanceof acceptable) found = true;
     }
 
     return found;
   };
 
-  return LineEnt;
-}(Operator);
+  return Line;
+}(command_1.default);
 
-var NorthEnt = function (_super) {
-  __extends(NorthEnt, _super);
+exports.default = Line;
 
-  function NorthEnt(x, y) {
+var NorthLine = function (_super) {
+  __extends(NorthLine, _super);
+
+  function NorthLine(x, y) {
     var _this = _super.call(this, "N", x, y) || this;
 
     _this.commands = [{
@@ -501,18 +704,26 @@ var NorthEnt = function (_super) {
       x: _this.x,
       y: 0
     }];
+    _this._commands = [{
+      x: _this.x,
+      y: _this.y
+    }, {
+      x: _this.x,
+      y: 0
+    }];
+    _this._commands = utils_1.clone(_this.commands);
     return _this;
   }
 
-  return NorthEnt;
-}(LineEnt);
+  return NorthLine;
+}(Line);
 
-exports.NorthEnt = NorthEnt;
+exports.NorthLine = NorthLine;
 
-var SouthEnt = function (_super) {
-  __extends(SouthEnt, _super);
+var SouthLine = function (_super) {
+  __extends(SouthLine, _super);
 
-  function SouthEnt(x, y) {
+  function SouthLine(x, y) {
     var _this = _super.call(this, "S", x, y) || this;
 
     _this.commands = [{
@@ -522,18 +733,19 @@ var SouthEnt = function (_super) {
       x: _this.x,
       y: settings_1.default.rows - 1
     }];
+    _this._commands = utils_1.clone(_this.commands);
     return _this;
   }
 
-  return SouthEnt;
-}(LineEnt);
+  return SouthLine;
+}(Line);
 
-exports.SouthEnt = SouthEnt;
+exports.SouthLine = SouthLine;
 
-var WestEnt = function (_super) {
-  __extends(WestEnt, _super);
+var WestLine = function (_super) {
+  __extends(WestLine, _super);
 
-  function WestEnt(x, y) {
+  function WestLine(x, y) {
     var _this = _super.call(this, "W", x, y) || this;
 
     _this.commands = [{
@@ -543,18 +755,19 @@ var WestEnt = function (_super) {
       x: 0,
       y: _this.y
     }];
+    _this._commands = utils_1.clone(_this.commands);
     return _this;
   }
 
-  return WestEnt;
-}(LineEnt);
+  return WestLine;
+}(Line);
 
-exports.WestEnt = WestEnt;
+exports.WestLine = WestLine;
 
-var EastEnt = function (_super) {
-  __extends(EastEnt, _super);
+var EastLine = function (_super) {
+  __extends(EastLine, _super);
 
-  function EastEnt(x, y) {
+  function EastLine(x, y) {
     var _this = _super.call(this, "E", x, y) || this;
 
     _this.commands = [{
@@ -564,42 +777,124 @@ var EastEnt = function (_super) {
       x: settings_1.default.cols - 1,
       y: _this.y
     }];
+    _this._commands = utils_1.clone(_this.commands);
     return _this;
   }
 
-  return EastEnt;
-}(LineEnt);
+  return EastLine;
+}(Line);
 
-exports.EastEnt = EastEnt; // Stop a line
+exports.EastLine = EastLine;
+},{"./command":"scripts/commander/commands/command.ts","../accepts":"scripts/commander/accepts.js","../../utils":"scripts/utils.ts","../../settings":"scripts/settings.ts"}],"scripts/commander/mappings.js":[function(require,module,exports) {
+"use strict";
 
-var StopMod = function (_super) {
-  __extends(StopMod, _super);
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
 
-  function StopMod(x, y) {
-    return _super.call(this, "x", x, y) || this;
+var _lines = require("./commands/lines");
+
+var _lines2 = require("./modifiers/lines");
+
+var _default = {
+  "N": _lines.NorthLine,
+  "n": _lines2.NorthLine,
+  "S": _lines.SouthLine,
+  "s": _lines2.SouthLine,
+  "W": _lines.WestLine,
+  "w": _lines2.WestLine,
+  "E": _lines.EastLine,
+  "e": _lines2.EastLine,
+  "x": _lines2.StopLine
+};
+exports.default = _default;
+},{"./commands/lines":"scripts/commander/commands/lines.ts","./modifiers/lines":"scripts/commander/modifiers/lines.ts"}],"scripts/commander/commander.ts":[function(require,module,exports) {
+"use strict";
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var settings_1 = __importDefault(require("../settings"));
+
+var mappings_1 = __importDefault(require("./mappings"));
+
+var command_1 = __importDefault(require("./commands/command"));
+
+var modifier_1 = __importDefault(require("./modifiers/modifier")); // Controller for all of our Commander.
+
+
+var Commander = function () {
+  function Commander(canvas) {
+    this.canvas = canvas;
+    this.canvas_context = canvas.getContext('2d');
+    this.commands = Array(settings_1.default.cols * settings_1.default.rows);
+    this.modifiers = Array(settings_1.default.cols * settings_1.default.rows);
   }
 
-  StopMod.prototype.modify = function (commands, instruction_index) {
-    var new_commands = commands.slice(0, instruction_index + 1);
-    new_commands.push({
-      x: this.x,
-      y: this.y
-    });
-    return new_commands;
+  Commander.prototype.write = function (glyph, x, y) {
+    var new_entity = new mappings_1.default[glyph](x, y);
+
+    if (new_entity instanceof modifier_1.default) {
+      this.modifiers[this.index_at(x, y)] = new_entity;
+      this.commands[this.index_at(x, y)] = undefined;
+    } else if (new_entity instanceof command_1.default) {
+      this.commands[this.index_at(x, y)] = new_entity;
+      this.modifiers[this.index_at(x, y)] = undefined;
+    }
+
+    this.refresh();
   };
 
-  return StopMod;
-}(LineMod);
+  Commander.prototype.erase = function (x, y) {
+    this.commands[this.index_at(x, y)] = undefined;
+    this.modifiers[this.index_at(x, y)] = undefined;
+  };
 
-exports.StopMod = StopMod;
-exports.library = {
-  "N": NorthEnt,
-  "S": SouthEnt,
-  "W": WestEnt,
-  "E": EastEnt,
-  "x": StopMod
-};
-},{"./settings":"scripts/settings.ts","./utils":"scripts/utils.ts"}],"scripts/cursor.ts":[function(require,module,exports) {
+  Commander.prototype.draw = function () {
+    this.canvas_context.clearRect(0, 0, settings_1.default.canvas_width, settings_1.default.canvas_height);
+
+    for (var _i = 0, _a = this.commands; _i < _a.length; _i++) {
+      var command = _a[_i];
+      if (command) command.draw(this.canvas_context);
+    }
+
+    for (var _b = 0, _c = this.modifiers; _b < _c.length; _b++) {
+      var modifier = _c[_b];
+      if (modifier) modifier.draw(this.canvas_context);
+    }
+  };
+
+  Commander.prototype.refresh = function () {
+    for (var _i = 0, _a = this.commands; _i < _a.length; _i++) {
+      var command = _a[_i];
+      if (command instanceof command_1.default) command.refresh(this.modifiers);
+    }
+  }; // Helpers
+
+
+  Commander.prototype.at = function (x, y) {
+    return this.commands.find(function (op) {
+      return op.x == x && op.y == y;
+    });
+  };
+
+  Commander.prototype.index_at = function (x, y) {
+    return y * settings_1.default.cols + x;
+  };
+
+  return Commander;
+}();
+
+exports.default = Commander;
+},{"../settings":"scripts/settings.ts","./mappings":"scripts/commander/mappings.js","./commands/command":"scripts/commander/commands/command.ts","./modifiers/modifier":"scripts/commander/modifiers/modifier.ts"}],"scripts/cursor.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -635,7 +930,7 @@ var Cursor = function () {
     var default_fn = function default_fn(_x, _y) {}; // ADD NEW EVENT NAMES HERE, MAKE SURE TO ADD THEM TO THE SWITCH CASE AS WELL!:
 
 
-    var event_names = ['move_left', 'move_right', 'move_up', 'move_down', 'Backspace', 'n', 's', 'e', 'w', 'x']; // Register event_names as object { event_name: default_fn }
+    var event_names = ['move_left', 'move_right', 'move_up', 'move_down', 'Backspace', 'N', 'S', 'E', 'W', 'n', 's', 'e', 'w', 'x']; // Register event_names as object { event_name: default_fn }
 
     this.events = event_names.reduce(function (prev, curr, _i) {
       prev[curr] = default_fn;
@@ -677,16 +972,32 @@ var Cursor = function () {
           binding.events['move_up'](binding.x, binding.y);
           break;
 
+        case 'N':
+          binding.events['N'](binding.x, binding.y);
+          break;
+
         case 'n':
           binding.events['n'](binding.x, binding.y);
+          break;
+
+        case 'S':
+          binding.events['S'](binding.x, binding.y);
           break;
 
         case 's':
           binding.events['s'](binding.x, binding.y);
           break;
 
+        case 'E':
+          binding.events['E'](binding.x, binding.y);
+          break;
+
         case 'e':
           binding.events['e'](binding.x, binding.y);
+          break;
+
+        case 'W':
+          binding.events['W'](binding.x, binding.y);
           break;
 
         case 'w':
@@ -753,50 +1064,60 @@ var settings_1 = __importDefault(require("./settings"));
 
 var reference_grid_1 = __importDefault(require("./reference-grid"));
 
-var operators_1 = __importDefault(require("./operators"));
+var commander_1 = __importDefault(require("./commander/commander"));
 
 var cursor_1 = __importDefault(require("./cursor"));
 
 var grid_canvas = document.getElementById('grid-canvas');
-var operator_canvas = document.getElementById('operator-canvas');
+var commander_canvas = document.getElementById('commander-canvas');
 var cursor_canvas = document.getElementById('cursor-canvas');
 
 var Ripl = function () {
   function Ripl() {
     var _this = this;
 
-    this.modifiers = []; // modifiers modify operators.
-
-    settings_1.default.install([grid_canvas, operator_canvas, cursor_canvas]);
+    settings_1.default.install([grid_canvas, commander_canvas, cursor_canvas]);
     this.grid = new reference_grid_1.default(grid_canvas);
-    this.operators = new operators_1.default(operator_canvas);
+    this.commander = new commander_1.default(commander_canvas);
     this.cursor = new cursor_1.default(cursor_canvas); // Cursor / keyboard listeners
 
+    this.cursor.on('N', function (x, y) {
+      return _this.commander.write("N", x, y);
+    });
     this.cursor.on('n', function (x, y) {
-      return _this.operators.write("N", x, y);
+      return _this.commander.write("n", x, y);
+    });
+    this.cursor.on('S', function (x, y) {
+      return _this.commander.write("S", x, y);
     });
     this.cursor.on('s', function (x, y) {
-      return _this.operators.write("S", x, y);
+      return _this.commander.write("s", x, y);
+    });
+    this.cursor.on('E', function (x, y) {
+      return _this.commander.write("E", x, y);
     });
     this.cursor.on('e', function (x, y) {
-      return _this.operators.write("E", x, y);
+      return _this.commander.write("e", x, y);
+    });
+    this.cursor.on('W', function (x, y) {
+      return _this.commander.write("W", x, y);
     });
     this.cursor.on('w', function (x, y) {
-      return _this.operators.write("W", x, y);
+      return _this.commander.write("w", x, y);
     });
     this.cursor.on('Backspace', function (x, y) {
-      _this.operators.erase(x, y);
+      _this.commander.erase(x, y);
 
-      _this.operators.refresh_objects();
+      _this.commander.refresh();
     });
     this.cursor.on('x', function (x, y) {
-      return _this.operators.write("x", x, y);
+      return _this.commander.write("x", x, y);
     });
   }
 
   Ripl.prototype.draw = function () {
     this.grid.draw();
-    this.operators.draw();
+    this.commander.draw();
     this.cursor.draw();
   };
 
@@ -804,7 +1125,7 @@ var Ripl = function () {
 }();
 
 exports.default = Ripl;
-},{"./settings":"scripts/settings.ts","./reference-grid":"scripts/reference-grid.ts","./operators":"scripts/operators.ts","./cursor":"scripts/cursor.ts"}],"scripts/main.ts":[function(require,module,exports) {
+},{"./settings":"scripts/settings.ts","./reference-grid":"scripts/reference-grid.ts","./commander/commander":"scripts/commander/commander.ts","./cursor":"scripts/cursor.ts"}],"scripts/main.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -855,7 +1176,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63546" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59722" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

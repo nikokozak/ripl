@@ -31,3 +31,8 @@ export function range(start: number, end: number) : Array<number>
     }
   return result;
 }
+
+export function clone(obj_or_array: object | Array<any>)
+{
+  return JSON.parse(JSON.stringify(obj_or_array));
+}

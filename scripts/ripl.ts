@@ -1,43 +1,44 @@
 import settings from './settings'
 import RefGrid from './reference-grid'
-import Operators from './operators'
+import Commander from './commander/commander'
 import Cursor from './cursor'
 
 const grid_canvas = document.getElementById('grid-canvas') as HTMLCanvasElement;
-const operator_canvas = document.getElementById('operator-canvas') as HTMLCanvasElement;
+const commander_canvas = document.getElementById('commander-canvas') as HTMLCanvasElement;
 const cursor_canvas = document.getElementById('cursor-canvas') as HTMLCanvasElement;
 
 export default class Ripl
 {
-	public operators: Operators;
-	public modifiers: Array<any>;
+	public commander: Commander;
 	public grid: RefGrid; public cursor: Cursor;
-
 
 	constructor ()
 	{
-		this.modifiers = []; // modifiers modify operators.
-
-		settings.install([grid_canvas, operator_canvas, cursor_canvas]);
+		settings.install([grid_canvas, commander_canvas, cursor_canvas]);
 
 		this.grid = new RefGrid(grid_canvas);
-		this.operators = new Operators(operator_canvas);
+		this.commander = new Commander(commander_canvas);
 		this.cursor = new Cursor(cursor_canvas);
 		
 		// Cursor / keyboard listeners
-		this.cursor.on('n', (x: number, y: number) => this.operators.write("N", x, y));
-		this.cursor.on('s', (x: number, y: number) => this.operators.write("S", x, y));
-		this.cursor.on('e', (x: number, y: number) => this.operators.write("E", x, y));
-		this.cursor.on('w', (x: number, y: number) => this.operators.write("W", x, y));
+		this.cursor.on('N', (x: number, y: number) => this.commander.write("N", x, y));
+		this.cursor.on('n', (x: number, y: number) => this.commander.write("n", x, y));
+		this.cursor.on('S', (x: number, y: number) => this.commander.write("S", x, y));
+		this.cursor.on('s', (x: number, y: number) => this.commander.write("s", x, y));
+		this.cursor.on('E', (x: number, y: number) => this.commander.write("E", x, y));
+		this.cursor.on('e', (x: number, y: number) => this.commander.write("e", x, y));
+		this.cursor.on('W', (x: number, y: number) => this.commander.write("W", x, y));
+		this.cursor.on('w', (x: number, y: number) => this.commander.write("w", x, y));
 		this.cursor.on('Backspace', (x: number, y: number) => {
-			this.operators.erase(x, y); this.operators.refresh_objects(); });
-		this.cursor.on('x', (x: number, y: number) => this.operators.write("x", x, y));
+			this.commander.erase(x, y); this.commander.refresh(); 
+		});
+		this.cursor.on('x', (x: number, y: number) => this.commander.write("x", x, y));
 	}
 
 	draw ()
 	{
 		this.grid.draw();
-		this.operators.draw();
+		this.commander.draw();
 		this.cursor.draw();
 	}
 }
