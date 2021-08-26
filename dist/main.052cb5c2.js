@@ -877,7 +877,46 @@ var Commander = function () {
 }();
 
 exports.default = Commander;
-},{"../settings":"scripts/settings.ts","./glyph_mappings":"scripts/commander/glyph_mappings.js","./commands/command":"scripts/commander/commands/command.ts","./modifiers/modifier":"scripts/commander/modifiers/modifier.ts"}],"scripts/cursor.ts":[function(require,module,exports) {
+},{"../settings":"scripts/settings.ts","./glyph_mappings":"scripts/commander/glyph_mappings.js","./commands/command":"scripts/commander/commands/command.ts","./modifiers/modifier":"scripts/commander/modifiers/modifier.ts"}],"scripts/cursor/events.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default_fn = exports.events = exports.event_mappings = void 0; // KeyboardEvent.key -> cursor event emitted
+
+exports.event_mappings = {
+  'h': 'move_left',
+  'l': 'move_right',
+  'j': 'move_down',
+  'k': 'move_up',
+  'N': 'N',
+  'S': 'S',
+  'E': 'E',
+  'W': 'W',
+  'n': 'n',
+  's': 's',
+  'e': 'e',
+  'w': 'w',
+  'Backspace': 'Backspace',
+  'x': 'x'
+};
+exports.events = Object.entries(exports.event_mappings).reduce(function (accum, _b, _i, _a) {
+  var _key = _b[0],
+      val = _b[1];
+  accum.push(val);
+  return accum;
+}, []);
+
+var default_fn = function default_fn(_x, _y) {};
+
+exports.default_fn = default_fn; // Exports a map of events: default_fn
+
+exports.default = exports.events.reduce(function (accum, curr) {
+  accum[curr] = exports.default_fn;
+  return accum;
+}, {});
+},{}],"scripts/cursor/cursor.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -890,9 +929,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var settings_1 = __importDefault(require("./settings"));
+var settings_1 = __importDefault(require("../settings"));
 
-var utils_1 = require("./utils");
+var utils_1 = require("../utils");
+
+var events_1 = __importDefault(require("./events"));
+
+var events_2 = require("./events");
 
 var Cursor = function () {
   function Cursor(canvas, x, y) {
@@ -909,16 +952,7 @@ var Cursor = function () {
     this.glyph = "@";
     this.x = x;
     this.y = y;
-
-    var default_fn = function default_fn(_x, _y) {}; // ADD NEW EVENT NAMES HERE, MAKE SURE TO ADD THEM TO THE SWITCH CASE AS WELL!:
-
-
-    var event_names = ['move_left', 'move_right', 'move_up', 'move_down', 'Backspace', 'N', 'S', 'E', 'W', 'n', 's', 'e', 'w', 'x']; // Register event_names as object { event_name: default_fn }
-
-    this.events = event_names.reduce(function (prev, curr, _i) {
-      prev[curr] = default_fn;
-      return prev;
-    }, {});
+    this.events = events_1.default;
     window.addEventListener("keydown", this.event_handler(this));
   }
 
@@ -930,69 +964,37 @@ var Cursor = function () {
     }
   };
 
-  Cursor.prototype.event_handler = function (binding) {
+  Cursor.prototype.event_handler = function (cursor) {
     return function (e) {
       var key = e.key;
 
       switch (key) {
         case 'h':
-          binding.move_left();
-          binding.events['move_left'](binding.x, binding.y);
+          cursor.move_left();
+          cursor.events[events_2.event_mappings['h']](cursor.x, cursor.y);
           break;
 
         case 'l':
-          binding.move_right();
-          binding.events['move_right'](binding.x, binding.y);
+          cursor.move_right();
+          cursor.events[events_2.event_mappings['l']](cursor.x, cursor.y);
           break;
 
         case 'j':
-          binding.move_down();
-          binding.events['move_down'](binding.x, binding.y);
+          cursor.move_down();
+          cursor.events[events_2.event_mappings['j']](cursor.x, cursor.y);
           break;
 
         case 'k':
-          binding.move_up();
-          binding.events['move_up'](binding.x, binding.y);
+          cursor.move_up();
+          cursor.events[events_2.event_mappings['k']](cursor.x, cursor.y);
           break;
 
-        case 'N':
-          binding.events['N'](binding.x, binding.y);
-          break;
+        default:
+          // Look up keypressed in event_mappings, and call local event function accordingly.
+          if (events_2.event_mappings.hasOwnProperty(key)) {
+            cursor.events[events_2.event_mappings[key]](cursor.x, cursor.y);
+          }
 
-        case 'n':
-          binding.events['n'](binding.x, binding.y);
-          break;
-
-        case 'S':
-          binding.events['S'](binding.x, binding.y);
-          break;
-
-        case 's':
-          binding.events['s'](binding.x, binding.y);
-          break;
-
-        case 'E':
-          binding.events['E'](binding.x, binding.y);
-          break;
-
-        case 'e':
-          binding.events['e'](binding.x, binding.y);
-          break;
-
-        case 'W':
-          binding.events['W'](binding.x, binding.y);
-          break;
-
-        case 'w':
-          binding.events['w'](binding.x, binding.y);
-          break;
-
-        case 'x':
-          binding.events['x'](binding.x, binding.y);
-          break;
-
-        case 'Backspace':
-          binding.events['Backspace'](binding.x, binding.y);
           break;
       }
     };
@@ -1030,7 +1032,7 @@ var Cursor = function () {
 }();
 
 exports.default = Cursor;
-},{"./settings":"scripts/settings.ts","./utils":"scripts/utils.ts"}],"scripts/ripl.ts":[function(require,module,exports) {
+},{"../settings":"scripts/settings.ts","../utils":"scripts/utils.ts","./events":"scripts/cursor/events.ts"}],"scripts/ripl.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -1049,7 +1051,7 @@ var reference_grid_1 = __importDefault(require("./reference-grid"));
 
 var commander_1 = __importDefault(require("./commander/commander"));
 
-var cursor_1 = __importDefault(require("./cursor"));
+var cursor_1 = __importDefault(require("./cursor/cursor"));
 
 var grid_canvas = document.getElementById('grid-canvas');
 var commander_canvas = document.getElementById('commander-canvas');
@@ -1108,7 +1110,7 @@ var Ripl = function () {
 }();
 
 exports.default = Ripl;
-},{"./settings":"scripts/settings.ts","./reference-grid":"scripts/reference-grid.ts","./commander/commander":"scripts/commander/commander.ts","./cursor":"scripts/cursor.ts"}],"scripts/main.ts":[function(require,module,exports) {
+},{"./settings":"scripts/settings.ts","./reference-grid":"scripts/reference-grid.ts","./commander/commander":"scripts/commander/commander.ts","./cursor/cursor":"scripts/cursor/cursor.ts"}],"scripts/main.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -1159,7 +1161,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59722" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55235" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

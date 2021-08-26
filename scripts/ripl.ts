@@ -1,7 +1,7 @@
 import settings from './settings'
 import RefGrid from './reference-grid'
 import Commander from './commander/commander'
-import Cursor from './cursor'
+import Cursor from './cursor/cursor'
 
 const grid_canvas = document.getElementById('grid-canvas') as HTMLCanvasElement;
 const commander_canvas = document.getElementById('commander-canvas') as HTMLCanvasElement;
