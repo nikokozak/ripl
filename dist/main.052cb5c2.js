@@ -653,19 +653,14 @@ var Line = function (_super) {
     var cY1 = this.commands[command_index + 1].y;
     var collision_range_x = utils_1.range(Math.min(cX, cX1), Math.max(cX, cX1));
     var collision_range_y = utils_1.range(Math.min(cY, cY1), Math.max(cY, cY1));
-    var collisions_at_curr_index = modifiers.filter(function (el) {
-      return el && collision_range_x.includes(el.x) && collision_range_y.includes(el.y) && (el.x != cX || el.y != cY);
+    var collisions_at_curr_index = modifiers.filter(function (modifier) {
+      return modifier && collision_range_x.includes(modifier.x) && collision_range_y.includes(modifier.y) && (modifier.x != cX || modifier.y != cY);
     });
     var nearest_collider = collisions_at_curr_index.sort(function (m1, m2) {
       var m1_diff = Math.abs(m1.x - cX) + Math.abs(m1.y - cY);
       var m2_diff = Math.abs(m2.x - cX) + Math.abs(m2.y - cY);
-      if (m1_diff < m2_diff) return -1;
-      if (m1_diff > m2_diff) return 1;
-      if (m1_diff == m2_diff) return 0;
+      return m1_diff - m2_diff;
     })[0];
-    console.log(collisions_at_curr_index);
-    console.log(command_index);
-    console.log(nearest_collider);
     return nearest_collider ? nearest_collider : false;
   };
 
@@ -676,14 +671,9 @@ var Line = function (_super) {
 
 
   Line.prototype.compatible = function (modifier) {
-    var found = false;
-
-    for (var _i = 0, _a = this.accepts; _i < _a.length; _i++) {
-      var acceptable = _a[_i];
-      if (modifier instanceof acceptable) found = true;
-    }
-
-    return found;
+    return this.accepts.find(function (acceptable) {
+      return modifier instanceof acceptable;
+    }) ? true : false;
   };
 
   return Line;
@@ -698,13 +688,6 @@ var NorthLine = function (_super) {
     var _this = _super.call(this, "N", x, y) || this;
 
     _this.commands = [{
-      x: _this.x,
-      y: _this.y
-    }, {
-      x: _this.x,
-      y: 0
-    }];
-    _this._commands = [{
       x: _this.x,
       y: _this.y
     }, {
@@ -785,7 +768,7 @@ var EastLine = function (_super) {
 }(Line);
 
 exports.EastLine = EastLine;
-},{"./command":"scripts/commander/commands/command.ts","../accepts":"scripts/commander/accepts.js","../../utils":"scripts/utils.ts","../../settings":"scripts/settings.ts"}],"scripts/commander/mappings.js":[function(require,module,exports) {
+},{"./command":"scripts/commander/commands/command.ts","../accepts":"scripts/commander/accepts.js","../../utils":"scripts/utils.ts","../../settings":"scripts/settings.ts"}],"scripts/commander/glyph_mappings.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -824,7 +807,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var settings_1 = __importDefault(require("../settings"));
 
-var mappings_1 = __importDefault(require("./mappings"));
+var glyph_mappings_1 = __importDefault(require("./glyph_mappings"));
 
 var command_1 = __importDefault(require("./commands/command"));
 
@@ -840,7 +823,7 @@ var Commander = function () {
   }
 
   Commander.prototype.write = function (glyph, x, y) {
-    var new_entity = new mappings_1.default[glyph](x, y);
+    var new_entity = new glyph_mappings_1.default[glyph](x, y);
 
     if (new_entity instanceof modifier_1.default) {
       this.modifiers[this.index_at(x, y)] = new_entity;
@@ -894,7 +877,7 @@ var Commander = function () {
 }();
 
 exports.default = Commander;
-},{"../settings":"scripts/settings.ts","./mappings":"scripts/commander/mappings.js","./commands/command":"scripts/commander/commands/command.ts","./modifiers/modifier":"scripts/commander/modifiers/modifier.ts"}],"scripts/cursor.ts":[function(require,module,exports) {
+},{"../settings":"scripts/settings.ts","./glyph_mappings":"scripts/commander/glyph_mappings.js","./commands/command":"scripts/commander/commands/command.ts","./modifiers/modifier":"scripts/commander/modifiers/modifier.ts"}],"scripts/cursor.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {

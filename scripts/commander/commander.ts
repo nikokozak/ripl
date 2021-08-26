@@ -1,5 +1,5 @@
 import s from '../settings';
-import mappings from './mappings';
+import glyph_mappings from './glyph_mappings';
 import Command from './commands/command'
 import Modifier from './modifiers/modifier'
 
@@ -21,7 +21,7 @@ export default class Commander
 
 	write (glyph: string, x: number, y: number)
 	{
-		const new_entity = new mappings[glyph](x, y) as Command | Modifier;
+		const new_entity = new glyph_mappings[glyph](x, y) as Command | Modifier;
 
 		if (new_entity instanceof Modifier)
 			{

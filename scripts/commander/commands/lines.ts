@@ -72,25 +72,19 @@ export default class Line extends Command
 		const collision_range_x = range(Math.min(cX, cX1), Math.max(cX, cX1));
 		const collision_range_y = range(Math.min(cY, cY1), Math.max(cY, cY1));
 
-		const collisions_at_curr_index = modifiers.filter(el => {
-			return el 
-			&& collision_range_x.includes(el.x) 
-			&& collision_range_y.includes(el.y)
-			&& (el.x != cX || el.y != cY)
+		const collisions_at_curr_index = modifiers.filter(modifier => {
+			return modifier 
+			&& collision_range_x.includes(modifier.x) 
+			&& collision_range_y.includes(modifier.y)
+			&& (modifier.x != cX || modifier.y != cY)
 		})
 
 		const nearest_collider = collisions_at_curr_index.sort((m1, m2) => {
 			const m1_diff = Math.abs(m1.x - cX) + Math.abs(m1.y - cY);
 			const m2_diff = Math.abs(m2.x - cX) + Math.abs(m2.y - cY);
 
-			if (m1_diff < m2_diff) return -1;
-			if (m1_diff > m2_diff) return 1;
-			if (m1_diff == m2_diff) return 0;
+			return m1_diff - m2_diff;
 		})[0]
-
-		console.log(collisions_at_curr_index)
-		console.log(command_index)
-		console.log(nearest_collider)
 
 		return nearest_collider ? nearest_collider : false;
 	}
@@ -104,9 +98,9 @@ export default class Line extends Command
 	// Check if the given operator is present in our "accepts" array.
 	compatible (modifier: Modifier): boolean
 	{
-		let found = false;
-		for (let acceptable of this.accepts) { if (modifier instanceof acceptable) found = true; }
-		return found;
+		return this.accepts.find(acceptable => {
+			return modifier instanceof acceptable;
+		}) ? true : false;
 	}
 
 }
@@ -124,12 +118,6 @@ export class NorthLine extends Line
 				y: 0 }
 		];
 
-		this._commands = [
-			{	x: this.x,
-				y: this.y },
-			{ x: this.x,
-				y: 0 }
-		];
 		this._commands = clone(this.commands);
 	}
 }
@@ -146,6 +134,7 @@ export class SouthLine extends Line
 			{ x: this.x,
 				y: s.rows - 1 }
 		];
+
 		this._commands = clone(this.commands);
 	}
 }
@@ -162,6 +151,7 @@ export class WestLine extends Line
 			{ x: 0,
 				y: this.y }
 		];
+
 		this._commands = clone(this.commands);
 	}
 }
@@ -178,6 +168,7 @@ export class EastLine extends Line
 			{ x: s.cols - 1,
 				y: this.y }
 		];
+
 		this._commands = clone(this.commands);
 	}
 }
