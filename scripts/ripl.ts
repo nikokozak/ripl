@@ -35,11 +35,15 @@ export default class Ripl
 		});
 		this.cursor.on('x', (x: number, y: number) => this.commander.write("x", x, y));
 		this.cursor.on('Enter', (x: number, y: number) => {
-			const popup = document.createElement('div') 
+			const frame = document.createElement('div') 
+			const text_box = document.createElement('input')
+			frame.appendChild(text_box);
 			const x_coord = grid_x_to_x(x);
 			const y_coord = grid_y_to_y(y);
-			popup.setAttribute('style', `width: 100px; height: 100px; background-color: red; position: absolute; left: ${x_coord}px; top: ${y_coord}px`);
-			document.body.appendChild(popup);
+			text_box.setAttribute('type', 'text')
+			frame.setAttribute('style', `width: 100px; height: 100px; background-color: red; position: absolute; left: ${x_coord}px; top: ${y_coord}px`);
+			document.body.appendChild(frame);
+			text_box.focus();
 		});
 	}
 
