@@ -2,6 +2,7 @@ import settings from './settings'
 import RefGrid from './reference-grid'
 import Commander from './commander/commander'
 import Cursor from './cursor/cursor'
+import Popup from './cursor/popup'
 import { grid_y_to_y, grid_x_to_x } from './utils'
 
 const grid_canvas = document.getElementById('grid-canvas') as HTMLCanvasElement;
@@ -35,15 +36,7 @@ export default class Ripl
 		});
 		this.cursor.on('x', (x: number, y: number) => this.commander.write("x", x, y));
 		this.cursor.on('Enter', (x: number, y: number) => {
-			const frame = document.createElement('div') 
-			const text_box = document.createElement('input')
-			frame.appendChild(text_box);
-			const x_coord = grid_x_to_x(x);
-			const y_coord = grid_y_to_y(y);
-			text_box.setAttribute('type', 'text')
-			frame.setAttribute('style', `width: 100px; height: 100px; background-color: red; position: absolute; left: ${x_coord}px; top: ${y_coord}px`);
-			document.body.appendChild(frame);
-			text_box.focus();
+			new Popup(x, y);
 		});
 	}
 
