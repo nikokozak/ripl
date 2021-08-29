@@ -9,6 +9,7 @@ export const event_mappings = {
 	'Backspace': 'Backspace',
 	'x': 'x',
 	'Enter': 'Enter',
+	'?': '?'
 }
 
 
