@@ -48,18 +48,22 @@ export default class Cursor
 			const key = e.key;
 
 			switch (key) {
+				case 'ArrowLeft':
 				case 'h': 
 					cursor.move_left();
 					cursor.events[event_mappings['h']](cursor.x, cursor.y);
 					break;
+				case 'ArrowRight':
 				case 'l':
 					cursor.move_right();
 					cursor.events[event_mappings['l']](cursor.x, cursor.y);
 					break;
+				case 'ArrowDown':
 				case 'j':
 					cursor.move_down();
 					cursor.events[event_mappings['j']](cursor.x, cursor.y);
 					break;
+				case 'ArrowUp':
 				case 'k':
 					cursor.move_up();
 					cursor.events[event_mappings['k']](cursor.x, cursor.y);
