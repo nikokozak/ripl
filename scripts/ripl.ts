@@ -27,7 +27,6 @@ export default class Ripl
 		
 		// Cursor / keyboard listeners
 		
-		// Helper for forming event functions
 		this.cursor.on_multiple(
 			['N', 'n', 'S', 's', 'E', 'e', 'W', 'w', 'x'],
 			(glyph: string) => {
