@@ -35,9 +35,10 @@ export default class Cursor
 			}
 	}
 
-	on_multiple(events: Array<string>, assoc_fun: (_x: number, _y: number) => any)
+	// Takes a generator function that must return a standard x, y event function for each event glyph it's passed.
+	on_multiple(events: Array<string>, assoc_fun: (glyph: string) => (_x: number, _y: number) => any)
 	{
-		events.forEach(event => this.on(event, assoc_fun));
+		events.forEach(event => this.on(event, assoc_fun(event)));
 	}
 
 	private event_handler(cursor: Cursor) 

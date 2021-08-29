@@ -26,67 +26,43 @@ export default class Ripl
 		this.term = new Term();
 		
 		// Cursor / keyboard listeners
-		this.cursor.on('N', (x: number, y: number) => {
-			const entity = this.commander.write("N", x, y);
-			this.cursor.glyph = entity.glyph;
-			this.term.set_message(entity.name);
+		
+		// Helper for forming event functions
+		this.cursor.on_multiple(
+			['N', 'n', 'S', 's', 'E', 'e', 'W', 'w', 'x'],
+			(glyph: string) => {
+				return (x: number, y: number) => {
+					const entity = this.commander.write(glyph, x, y);
+					this.cursor.glyph = entity.glyph;
+					this.term.set_message(entity.name);
+				}
 		});
-		this.cursor.on('n', (x: number, y: number) => {
-			const entity = this.commander.write("n", x, y);
-			this.cursor.glyph = entity.glyph;
-			this.term.set_message(entity.name);
-		});
-		this.cursor.on('S', (x: number, y: number) => {
-			const entity = this.commander.write("S", x, y);
-			this.cursor.glyph = entity.glyph;
-			this.term.set_message(entity.name);
-		});
-		this.cursor.on('s', (x: number, y: number) => {
-			const entity = this.commander.write("s", x, y);
-			this.cursor.glyph = entity.glyph;
-			this.term.set_message(entity.name);
-		});
-		this.cursor.on('E', (x: number, y: number) => {
-			const entity = this.commander.write("E", x, y)
-			this.cursor.glyph = entity.glyph;
-			this.term.set_message(entity.name);
-		});
-		this.cursor.on('e', (x: number, y: number) => {
-			const entity = this.commander.write("e", x, y)
-			this.cursor.glyph = entity.glyph;
-			this.term.set_message(entity.name);
-		});
-		this.cursor.on('W', (x: number, y: number) => {
-			const entity = this.commander.write("W", x, y)
-			this.cursor.glyph = entity.glyph;
-			this.term.set_message(entity.name);
-		});
-		this.cursor.on('w', (x: number, y: number) => {
-			const entity = this.commander.write("w", x, y)
-			this.cursor.glyph = entity.glyph;
-			this.term.set_message(entity.name);
-		});
+
 		this.cursor.on('Backspace', (x: number, y: number) => {
-			this.commander.erase(x, y); this.commander.refresh(); 
+			this.commander.erase(x, y); 
+			this.cursor.glyph = "@";
+			this.term.set_message();
+			this.commander.refresh(); 
 		});
-		this.cursor.on('x', (x: number, y: number) => {
-			const entity = this.commander.write("x", x, y)
-			this.cursor.glyph = entity.glyph;
-			this.term.set_message(entity.name);
-		});
+
 		this.cursor.on('Enter', (x: number, y: number) => {
 			new Popup(x, y);
 		});
-		this.cursor.on_multiple(['move_left', 'move_right', 'move_up', 'move_down'], (x: number, y: number) => {
-			const entity = this.commander.at(x, y);
-			if (entity) { 
-				this.term.set_message(entity.name);
-				this.cursor.glyph = entity.glyph;
-			}
-			else { 
-				this.term.set_message();
-				this.cursor.glyph = "@";
-			}
+
+		this.cursor.on_multiple(
+			['move_left', 'move_right', 'move_up', 'move_down'], 
+			(_event_name: string) => {
+				return (x: number, y: number) => {
+					const entity = this.commander.at(x, y);
+					if (entity) { 
+						this.term.set_message(entity.name);
+						this.cursor.glyph = entity.glyph;
+					}
+					else { 
+						this.term.set_message();
+						this.cursor.glyph = "@";
+					}
+				}
 		});
 	}
 
