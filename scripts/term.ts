@@ -48,6 +48,7 @@ export default class Term
 			height: `20px`,
 			position: `absolute`,
 			top: `${s.canvas_height + 20}px`,
+			left: `50px`,
 			'background-color': `${s.bg_color}`,
 			color: `${s.font_color}`
 		}

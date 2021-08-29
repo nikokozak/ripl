@@ -49,8 +49,11 @@ class Settings
 		for (let canvas of canvases)
 			{
 				const canvas_context = canvas.getContext('2d');
-				canvas.width = this.canvas_width;
-				canvas.height = this.canvas_height;
+				canvas.width = this.canvas_width * devicePixelRatio;
+				canvas.height = this.canvas_height * devicePixelRatio;
+				canvas_context.scale(devicePixelRatio, devicePixelRatio);
+				canvas.style.width = this.canvas_width + 'px';
+				canvas.style.height = this.canvas_height + 'px';
 				canvas_context.textBaseline = this.text_baseline;
 				canvas_context.textAlign = this.text_align;
 				canvas_context.font = this.font;

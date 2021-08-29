@@ -42,7 +42,9 @@ export default class HelpMenu
 		<p>'N' | 'S' | 'E' | 'W' - create line command</p>
 		<p>'n' | 's' | 'e' | 'w' - create line modifier</p>
 		<p> 'x' - stop line</p>
-		<p> 'Backspace' - erase modifier or command.
+		<p> 'Backspace' - erase modifier or command.</p>
+		<br />
+		<p>Move using the move keys to begin</p>
 		`;
 	}
 
