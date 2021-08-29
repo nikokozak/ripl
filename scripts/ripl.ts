@@ -26,25 +26,67 @@ export default class Ripl
 		this.term = new Term();
 		
 		// Cursor / keyboard listeners
-		this.cursor.on('N', (x: number, y: number) => this.commander.write("N", x, y));
-		this.cursor.on('n', (x: number, y: number) => this.commander.write("n", x, y));
-		this.cursor.on('S', (x: number, y: number) => this.commander.write("S", x, y));
-		this.cursor.on('s', (x: number, y: number) => this.commander.write("s", x, y));
-		this.cursor.on('E', (x: number, y: number) => this.commander.write("E", x, y));
-		this.cursor.on('e', (x: number, y: number) => this.commander.write("e", x, y));
-		this.cursor.on('W', (x: number, y: number) => this.commander.write("W", x, y));
-		this.cursor.on('w', (x: number, y: number) => this.commander.write("w", x, y));
+		this.cursor.on('N', (x: number, y: number) => {
+			const entity = this.commander.write("N", x, y);
+			this.cursor.glyph = entity.glyph;
+			this.term.set_message(entity.name);
+		});
+		this.cursor.on('n', (x: number, y: number) => {
+			const entity = this.commander.write("n", x, y);
+			this.cursor.glyph = entity.glyph;
+			this.term.set_message(entity.name);
+		});
+		this.cursor.on('S', (x: number, y: number) => {
+			const entity = this.commander.write("S", x, y);
+			this.cursor.glyph = entity.glyph;
+			this.term.set_message(entity.name);
+		});
+		this.cursor.on('s', (x: number, y: number) => {
+			const entity = this.commander.write("s", x, y);
+			this.cursor.glyph = entity.glyph;
+			this.term.set_message(entity.name);
+		});
+		this.cursor.on('E', (x: number, y: number) => {
+			const entity = this.commander.write("E", x, y)
+			this.cursor.glyph = entity.glyph;
+			this.term.set_message(entity.name);
+		});
+		this.cursor.on('e', (x: number, y: number) => {
+			const entity = this.commander.write("e", x, y)
+			this.cursor.glyph = entity.glyph;
+			this.term.set_message(entity.name);
+		});
+		this.cursor.on('W', (x: number, y: number) => {
+			const entity = this.commander.write("W", x, y)
+			this.cursor.glyph = entity.glyph;
+			this.term.set_message(entity.name);
+		});
+		this.cursor.on('w', (x: number, y: number) => {
+			const entity = this.commander.write("w", x, y)
+			this.cursor.glyph = entity.glyph;
+			this.term.set_message(entity.name);
+		});
 		this.cursor.on('Backspace', (x: number, y: number) => {
 			this.commander.erase(x, y); this.commander.refresh(); 
 		});
-		this.cursor.on('x', (x: number, y: number) => this.commander.write("x", x, y));
+		this.cursor.on('x', (x: number, y: number) => {
+			const entity = this.commander.write("x", x, y)
+			this.cursor.glyph = entity.glyph;
+			this.term.set_message(entity.name);
+		});
 		this.cursor.on('Enter', (x: number, y: number) => {
 			new Popup(x, y);
 		});
 		this.cursor.on_multiple(['move_left', 'move_right', 'move_up', 'move_down'], (x: number, y: number) => {
 			const entity = this.commander.at(x, y);
-			if (entity) { this.term.set_message(entity.name); }
-			else { this.term.set_message(); }
+			if (entity) { 
+				this.term.set_message(entity.name);
+				this.cursor.glyph = entity.glyph;
+			}
+			else { 
+				this.term.set_message();
+				this.cursor.glyph = "@";
+			}
 		});
 	}
 
