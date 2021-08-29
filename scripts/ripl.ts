@@ -3,7 +3,7 @@ import RefGrid from './reference-grid'
 import Commander from './commander/commander'
 import Cursor from './cursor/cursor'
 import Popup from './cursor/popup'
-import { grid_y_to_y, grid_x_to_x } from './utils'
+import Term from './term'
 
 const grid_canvas = document.getElementById('grid-canvas') as HTMLCanvasElement;
 const commander_canvas = document.getElementById('commander-canvas') as HTMLCanvasElement;
@@ -12,7 +12,9 @@ const cursor_canvas = document.getElementById('cursor-canvas') as HTMLCanvasElem
 export default class Ripl
 {
 	public commander: Commander;
-	public grid: RefGrid; public cursor: Cursor;
+	public grid: RefGrid; 
+	public cursor: Cursor;
+	public term: Term;
 
 	constructor ()
 	{
@@ -21,6 +23,7 @@ export default class Ripl
 		this.grid = new RefGrid(grid_canvas);
 		this.commander = new Commander(commander_canvas);
 		this.cursor = new Cursor(cursor_canvas);
+		this.term = new Term();
 		
 		// Cursor / keyboard listeners
 		this.cursor.on('N', (x: number, y: number) => this.commander.write("N", x, y));

@@ -36,3 +36,10 @@ export function clone(obj_or_array: object | Array<any>)
 {
   return JSON.parse(JSON.stringify(obj_or_array));
 }
+
+export function obj_to_style(obj_of_styles: object)
+{
+  return Object.entries(obj_of_styles).reduce((accum, [key, val]) => {
+    return accum + `${key}: ${val};`
+  }, "");
+}
