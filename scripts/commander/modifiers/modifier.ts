@@ -3,7 +3,11 @@ import { grid_x_to_x, grid_y_to_y } from '../../utils'
 
 export default class Modifier
 {
-	public x: number; public y: number; public glyph: string;
+	public x: number; 
+	public y: number;
+	public glyph: string;
+	public name: string;
+
 	constructor (glyph: string, x: number, y: number)
 	{
 		this.x = x; this.y = y; this.glyph = glyph;

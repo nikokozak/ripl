@@ -111,6 +111,8 @@ export class NorthLine extends Line
 	{
 		super("N", x, y);
 
+		this.name = "North Line";
+
 		this.commands = [
 			{	x: this.x,
 				y: this.y },
@@ -127,6 +129,8 @@ export class SouthLine extends Line
 	constructor (x: number, y: number)
 	{
 		super("S", x, y);
+
+		this.name = "South Line";
 
 		this.commands = [
 			{ x: this.x,
@@ -145,6 +149,8 @@ export class WestLine extends Line
 	{
 		super("W", x, y);
 
+		this.name = "West Line";
+
 		this.commands = [
 			{ x: this.x,
 				y: this.y },
@@ -161,6 +167,8 @@ export class EastLine extends Line
 	constructor (x: number, y: number)
 	{
 		super("E", x, y);
+
+		this.name = "East Line";
 
 		this.commands = [
 			{ x: this.x,

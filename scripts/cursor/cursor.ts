@@ -35,6 +35,11 @@ export default class Cursor
 			}
 	}
 
+	on_multiple(events: Array<string>, assoc_fun: (_x: number, _y: number) => any)
+	{
+		events.forEach(event => this.on(event, assoc_fun));
+	}
+
 	private event_handler(cursor: Cursor) 
 	{
 		return function (e: KeyboardEvent) 

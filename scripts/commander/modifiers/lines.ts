@@ -7,6 +7,8 @@ export class StopLine extends Modifier
 	constructor (x: number, y: number)
 	{
 		super("x", x, y);
+		
+		this.name = "Stop Line Modifier";
 	}
 
 	modify (commands: Array<any>, instruction_index: number)
@@ -23,6 +25,8 @@ export class NorthLine extends Modifier
 	constructor (x: number, y: number)
 	{
 		super("n", x, y);
+
+		this.name = "North Line Modifier";
 	}
 
 	modify (commands: Array<any>, instruction_index: number)
@@ -40,6 +44,8 @@ export class SouthLine extends Modifier
 	constructor (x: number, y: number)
 	{
 		super("s", x, y);
+
+		this.name = "South Line Modifier";
 	}
 
 	modify (commands: Array<any>, instruction_index: number)
@@ -57,6 +63,8 @@ export class EastLine extends Modifier
 	constructor (x: number, y: number)
 	{
 		super("e", x, y);
+
+		this.name = "East Line Modifier";
 	}
 
 	modify (commands: Array<any>, instruction_index: number)
@@ -74,6 +82,8 @@ export class WestLine extends Modifier
 	constructor (x: number, y: number)
 	{
 		super("w", x, y);
+
+		this.name = "West Line Modifier";
 	}
 
 	modify (commands: Array<any>, instruction_index: number)

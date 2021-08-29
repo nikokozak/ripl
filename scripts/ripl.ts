@@ -41,6 +41,11 @@ export default class Ripl
 		this.cursor.on('Enter', (x: number, y: number) => {
 			new Popup(x, y);
 		});
+		this.cursor.on_multiple(['move_left', 'move_right', 'move_up', 'move_down'], (x: number, y: number) => {
+			const entity = this.commander.at(x, y);
+			if (entity) { this.term.set_message(entity.name); }
+			else { this.term.set_message(); }
+		});
 	}
 
 	draw ()

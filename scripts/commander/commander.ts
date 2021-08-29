@@ -19,7 +19,7 @@ export default class Commander
 		this.modifiers = Array<Modifier>(s.cols * s.rows);
 	}
 
-	write (glyph: string, x: number, y: number)
+	write (glyph: string, x: number, y: number) : Command | Modifier
 	{
 		const new_entity = new glyph_mappings[glyph](x, y) as Command | Modifier;
 
@@ -35,6 +35,7 @@ export default class Commander
 			}
 
 		this.refresh();
+		return new_entity;
 	}
 
 	erase (x: number, y: number)
@@ -66,9 +67,9 @@ export default class Commander
 
 	// Helpers
 
-	at (x: number, y: number): Command | void
+	at (x: number, y: number): Command | Modifier | void
 	{
-		return this.commands.find(op => op.x == x && op.y == y);
+		return this.commands.find(op => op ? op.x == x && op.y == y : false) || this.modifiers.find(mod => mod ? mod.x == x && mod.y == y : false);
 	}
 
 	index_at (x: number, y: number): number

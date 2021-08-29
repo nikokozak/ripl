@@ -5,6 +5,7 @@ import Modifier from '../modifiers/modifier'
 export default class Command 
 {
 	public x: number; public y: number; public glyph: string;
+	public name: string;
 
 	constructor (glyph: string, x: number, y: number)
 	{
