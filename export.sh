@@ -1,8 +1,8 @@
 #! /bin/sh
 
-parcel rm -rf dist
-parcel rm -rf .parcel-cache
-parcel build '.' index.html
+rm -rf dist
+rm -rf .parcel-cache
+parcel build --public-url '.' index.html
 
 cp dist/* ../website/site/assets/programs/ripl-1/
 
