@@ -30,7 +30,7 @@ export default class HelpMenu
 		<p>Help Menu</p>
 		<br />
 		<p>This is a rudimentary and experimental CAD program.</p>
-		<p>This version does not support saving or exportind drawings.</p>
+		<p>This version does not support saving or exporting drawings.</p>
 		<br />
 		<p>Controls:</p>
 		<br />
